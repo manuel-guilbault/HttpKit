@@ -68,6 +68,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ActionResultsExtensions.cs" />
+    <Compile Include="ActionResults\AggregateResult.cs" />
+    <Compile Include="ActionResults\HeadersResult.cs" />
     <Compile Include="ActionResults\IfMatchResult.cs" />
     <Compile Include="ActionResults\IfModifiedSinceResult.cs" />
     <Compile Include="ActionResults\IfNoneMatchResult.cs" />
@@ -75,10 +78,13 @@
     <Compile Include="ActionResults\RangeResult.cs" />
     <Compile Include="ActionResults\StreamRangeResult.cs" />
     <Compile Include="ExpirationControllerExtensions.cs" />
+    <Compile Include="ExpirationActionResultsExtensions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RangeControllerExtensions.cs" />
+    <Compile Include="RangeActionResultsExtensions.cs" />
     <Compile Include="RangeStreamDecorator.cs" />
     <Compile Include="ValidationControllerExtensions.cs" />
+    <Compile Include="ValidationActionResultsExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\HttpKit.AspNet\HttpKit.AspNet.csproj">
