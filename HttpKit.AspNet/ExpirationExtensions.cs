@@ -16,7 +16,7 @@ namespace HttpKit.AspNet
             var value = headers[ExpirationHeaders.DATE];
             if (value == null) return null;
 
-            return ParserUtil.TryParseDateTime(value);
+            return DateTimeParser.TryParse(value);
         }
 
         public static void SetDate(this NameValueCollection headers, DateTime date)
@@ -45,7 +45,7 @@ namespace HttpKit.AspNet
             var value = headers[ExpirationHeaders.EXPIRES];
             if (value == null) return null;
 
-            return ParserUtil.TryParseDateTime(value);
+            return DateTimeParser.TryParse(value);
         }
 
         public static void SetExpires(this NameValueCollection headers, DateTime expires)
@@ -63,7 +63,7 @@ namespace HttpKit.AspNet
             var value = headers[ExpirationHeaders.LAST_MODIFIED];
             if (value == null) return null;
 
-            return ParserUtil.TryParseDateTime(value);
+            return DateTimeParser.TryParse(value);
         }
 
         public static void SetLastModified(this NameValueCollection headers, DateTime lastModified)
@@ -76,7 +76,7 @@ namespace HttpKit.AspNet
             var value = headers[ExpirationHeaders.IF_MODIFIED_SINCE];
             if (value == null) return null;
 
-            return ParserUtil.TryParseDateTime(value);
+            return DateTimeParser.TryParse(value);
         }
 
         public static void SetIfModifiedSince(this NameValueCollection headers, DateTime ifModifiedSince)
@@ -89,7 +89,7 @@ namespace HttpKit.AspNet
             var value = headers[ExpirationHeaders.IF_UNMODIFIED_SINCE];
             if (value == null) return null;
 
-            return ParserUtil.TryParseDateTime(value);
+            return DateTimeParser.TryParse(value);
         }
 
         public static void SetIfUnmodifiedSince(this NameValueCollection headers, DateTime ifUnmodifiedSince)

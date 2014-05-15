@@ -9,6 +9,16 @@ namespace HttpKit.Caching
 	{
 		private readonly IDictionary<string, IRequestCacheDirective> directives = new Dictionary<string, IRequestCacheDirective>();
 
+        public RequestCacheControl(params IRequestCacheDirective[] directives)
+        {
+            if (directives == null) throw new ArgumentNullException("directives");
+
+            foreach (var directive in directives)
+            {
+                Add(directive);
+            }
+        }
+
         public bool Has(IRequestCacheDirective directive)
 		{
 			if (directive == null) throw new ArgumentNullException("directive");

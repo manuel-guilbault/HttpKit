@@ -39,8 +39,23 @@ namespace HttpKit.Caching
 
 		public override int GetHashCode()
         {
-            return unchecked(value.GetHashCode() * (isWeak ? 23 : 1));
+            return GetHashCode(defaultComparisonType);
 		}
+
+        public int GetHashCode(EntityTagComparisonType comparisonType)
+        {
+            switch (comparisonType)
+            {
+                case EntityTagComparisonType.Strong:
+                    return unchecked(value.GetHashCode() * (isWeak ? 23 : 1));
+
+                case EntityTagComparisonType.Weak:
+                    return value.GetHashCode();
+
+                default:
+                    throw new InvalidProgramException("Unknown EntityTagComparisonType." + comparisonType);
+            }
+        }
 
 		public override bool Equals(object other)
 		{

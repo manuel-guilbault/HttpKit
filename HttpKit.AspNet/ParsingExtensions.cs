@@ -11,10 +11,9 @@ namespace HttpKit.AspNet
     public static class ParsingExtensions
     {
         public static T TryParse<T>(this NameValueCollection headers, string name, IHeaderParser<T> parser)
-            where T : class
         {
             var value = headers[name];
-            if (value == null) return null;
+            if (value == null) return default(T);
 
             try
             {
@@ -22,7 +21,7 @@ namespace HttpKit.AspNet
             }
             catch (ParsingException)
             {
-                return null;
+                return default(T);
             }
         }
     }

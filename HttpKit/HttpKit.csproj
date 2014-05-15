@@ -65,10 +65,10 @@
     <Compile Include="Caching\ResponseCacheDirectiveParsers.cs" />
     <Compile Include="Caching\ValidationHeaders.cs" />
     <Compile Include="DateTimeExtensions.cs" />
+    <Compile Include="Parsing\DateTimeParser.cs" />
     <Compile Include="Parsing\HeaderReader.cs" />
     <Compile Include="Parsing\IHeaderParser.cs" />
     <Compile Include="Parsing\IHeaderReader.cs" />
-    <Compile Include="Parsing\ParserUtil.cs" />
     <Compile Include="Parsing\ParsingException.cs" />
     <Compile Include="Parsing\Tokenizer.cs" />
     <Compile Include="Parsing\TokenizerExtensions.cs" />

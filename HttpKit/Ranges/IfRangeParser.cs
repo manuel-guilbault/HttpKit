@@ -35,9 +35,9 @@ namespace HttpKit.Ranges
 			}
 		}
 
-		protected DateTime? TryParseLastModified(string value)
+        protected DateTime? TryParseLastModified(Tokenizer tokenizer)
 		{
-            return ParserUtil.TryParseDateTime(value);
+            return tokenizer.TryReadDateTime();
 		}
 
         public IIfRange Parse(Tokenizer tokenizer)
@@ -50,7 +50,7 @@ namespace HttpKit.Ranges
 				return new IfRange(entityTag);
 			}
 
-			var lastModified = TryParseLastModified(tokenizer.Value);
+            var lastModified = TryParseLastModified(tokenizer);
 			if (lastModified != null)
 			{
 				return new IfRange(lastModified.Value);

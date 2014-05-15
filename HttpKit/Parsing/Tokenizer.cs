@@ -37,10 +37,5 @@ namespace HttpKit.Parsing
         {
             return value.Substring(position);
         }
-
-		public ParsingException CreateException(string message, int offset = 0)
-		{
-			return new ParsingException(message, value, position + offset);
-		}
     }
 }

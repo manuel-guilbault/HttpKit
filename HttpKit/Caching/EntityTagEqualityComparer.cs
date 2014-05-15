@@ -27,7 +27,9 @@ namespace HttpKit.Caching
 
         public int GetHashCode(IEntityTag obj)
         {
-            return obj.GetHashCode();
+            if (obj == null) throw new ArgumentNullException("obj");
+
+            return obj.GetHashCode(comparisonType);
         }
     }
 }

@@ -8,6 +8,60 @@ namespace HttpKit.Parsing
 {
     public static class TokenizerExtensions
     {
+        private const char CarriageReturn = (char)13;
+        private const char LineFeed = (char)10;
+        private const char Space = (char)32;
+        private const char HorizontalTab = (char)9;
+        private const char DoubleQuote = (char)34;
+        private static readonly string CrLf = ((char)13).ToString() + (char)10;
+
+        private static readonly string TokenSeparators = @"()<>@,;:\""/[]?={} " + HorizontalTab;
+
+        private static bool IsControl(char c)
+        {
+            return (c >= 0 && c <= 31) || c == 127;
+        }
+
+        private static bool IsChar(char c)
+        {
+            return c >= 0 && c <= 127;
+        }
+
+        private static bool IsUpperAlpha(char c)
+        {
+            return c >= 'A' && c <= 'Z';
+        }
+
+        private static bool IsLowerAlpha(char c)
+        {
+            return c >= 'a' && c <= 'z';
+        }
+
+        private static bool IsDigit(char c)
+        {
+            return c >= '0' && c <= '9';
+        }
+
+        private static bool IsText(char c)
+        {
+            return !IsControl(c);
+        }
+
+        private static bool IsHexadecimal(char c)
+        {
+            return IsDigit(c) || "abcdefABCDEF".Contains(c);
+        }
+
+        private static bool IsTokenSeparator(char c)
+        {
+            return TokenSeparators.Contains(c);
+        }
+
+        public static ParsingException CreateException(this Tokenizer tokenizer, string message, int offset = 0)
+        {
+            return new ParsingException(message, tokenizer.Value, tokenizer.Position + offset);
+        }
+
         public static bool IsAtEnd(this Tokenizer tokenizer, int offset = 0)
         {
             if (offset < 0) throw new ArgumentException("offset must be equal to or greater than zero", "offset");
@@ -145,6 +199,31 @@ namespace HttpKit.Parsing
             {
 				throw tokenizer.CreateException("Number overflow", -numberPosition);
             }
+        }
+
+        public static DateTime? TryReadDateTime(this Tokenizer tokenizer)
+        {
+            return DateTimeParser.TryParse(tokenizer.ToString());
+        }
+
+        public static string PeekToken(this Tokenizer tokenizer)
+        {
+            return tokenizer.PeekWhile(c => !IsControl(c) && !IsTokenSeparator(c));
+        }
+
+        public static string ReadToken(this Tokenizer tokenizer)
+        {
+            var token = tokenizer.ReadWhile(c => !IsControl(c) && !IsTokenSeparator(c));
+            if (token == "") throw tokenizer.CreateException("Token expected");
+
+            return token;
+        }
+
+        public static bool IsNextToken(this Tokenizer tokenizer, string token, StringComparison comparisonType = StringComparison.InvariantCulture)
+        {
+            if (token == null) throw new ArgumentNullException("token");
+
+            return string.Equals(tokenizer.PeekToken(), token, comparisonType);
         }
     }
 }

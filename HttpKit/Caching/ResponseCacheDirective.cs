@@ -18,11 +18,14 @@ namespace HttpKit.Caching
 		public const string SHARED_MAX_AGE = "s-maxage";
 
 		public static readonly ResponseCacheDirective Public = new ResponseCacheDirective(PUBLIC);
+        public static readonly ResponseCacheDirective Private = CreatePrivate();
 
 		public static FieldListResponseCacheDirective CreatePrivate(params string[] fields)
 		{
 			return new FieldListResponseCacheDirective(PRIVATE, fields);
 		}
+
+        public static ResponseCacheDirective NoCache = CreateNoCache();
 
 		public static FieldListResponseCacheDirective CreateNoCache(params string[] fields)
 		{

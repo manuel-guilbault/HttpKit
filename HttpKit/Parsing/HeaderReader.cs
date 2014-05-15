@@ -22,6 +22,7 @@ namespace HttpKit.Parsing
 
             var tokenizer = new Tokenizer(value);
             var result = parser.Parse(tokenizer);
+            tokenizer.SkipWhiteSpaces();
             if (!tokenizer.IsAtEnd())
             {
 				throw tokenizer.CreateException("End of string expected");

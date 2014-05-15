@@ -11,5 +11,6 @@ namespace HttpKit.Caching
         bool IsWeak { get; }
         string Value { get; }
         bool Equals(IEntityTag other, EntityTagComparisonType comparisonType);
+        int GetHashCode(EntityTagComparisonType comparisonType);
     }
 }
