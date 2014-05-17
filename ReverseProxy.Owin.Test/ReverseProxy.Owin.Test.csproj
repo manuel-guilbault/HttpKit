@@ -59,10 +59,14 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="DefaultLockManagerTest.cs" />
+    <Compile Include="TaskExtensions.cs" />
+    <Compile Include="MiddlewareTests\ConcurrencyTests.cs" />
     <Compile Include="MiddlewareTests\ExpirationTests.cs" />
     <Compile Include="MiddlewareTests\RequestGlobalTests.cs" />
     <Compile Include="Mocks\CacheMock.cs" />
     <Compile Include="Mocks\ConfigurationMock.cs" />
+    <Compile Include="Mocks\LockManagerMock.cs" />
     <Compile Include="Mocks\MockExtensions.cs" />
     <Compile Include="Mocks\NextOwinMiddlewareMock.cs" />
     <Compile Include="Mocks\OwinContextMock.cs" />

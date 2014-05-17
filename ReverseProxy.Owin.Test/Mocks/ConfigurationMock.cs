@@ -12,10 +12,12 @@ namespace ReverseProxy.Owin.Test.Mocks
         public ConfigurationMock()
         {
             CacheMock = new CacheMock();
-            Configuration = new Configuration(CacheMock.Object);
+            LockManagerMock = new LockManagerMock();
+            Configuration = new Configuration(CacheMock.Object, LockManagerMock.Object);
         }
 
         public Configuration Configuration { get; private set; }
         public Mock<ICache> CacheMock { get; private set; }
+        public Mock<ILockManager> LockManagerMock { get; private set; }
     }
 }

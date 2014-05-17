@@ -25,27 +25,76 @@ namespace ReverseProxy.Owin
         {
             if (!IsCacheable(context.Request))
             {
-                await Next.Invoke(context);
+                await HandleUncacheableRequest(context);
                 return;
             }
             
             var cacheKey = GetCacheKey(context.Request);
+            if (!await TryUseCachedResponse(context, cacheKey))
+            {
+                await HandleUncachedRequest(context, cacheKey);
+            }
+        }
+
+        private async Task<bool> TryUseCachedResponse(IOwinContext context, ICacheKey cacheKey)
+        {
             var cacheEntry = await TryGetFromCache(cacheKey);
             if (cacheEntry == null)
             {
+                return false;
             }
-            else if (IsValid(cacheEntry, context.Request))
-            {
-                Output(context.Response, cacheEntry);
-                return;
-            }
-            
-            await Next.Invoke(context);
 
-            if (IsCacheable(context.Response))
+            if (IsFresh(cacheEntry, context.Request))
             {
-                await Cache(cacheKey, context);
+                await HandleFreshCachedResponse(context, cacheKey, cacheEntry);
             }
+            else
+            {
+                await HandleStaleCachedResponse(context, cacheKey, cacheEntry);
+            }
+            return true;
+        }
+
+        private async Task HandleUncacheableRequest(IOwinContext context)
+        {
+            await Next.Invoke(context);
+        }
+
+        private async Task HandleUncachedRequest(IOwinContext context, ICacheKey cacheKey)
+        {
+            var lockHandle = configuration.LockManager.Lock(cacheKey);
+            if (lockHandle == null)
+            {
+                try
+                {
+                    await Next.Invoke(context);
+
+                    if (IsCacheable(context.Response))
+                    {
+                        await Cache(cacheKey, context);
+                    }
+                }
+                finally
+                {
+                    configuration.LockManager.Unlock(cacheKey, context.Response);
+                }
+            }
+            else
+            {
+                var response = await lockHandle;
+                response.CopyTo(context.Response);
+            }
+        }
+
+        private Task HandleFreshCachedResponse(IOwinContext context, ICacheKey cacheKey, ICacheEntry cacheEntry)
+        {
+            Output(context.Response, cacheEntry);
+            return Task.FromResult<object>(null);
+        }
+
+        private async Task HandleStaleCachedResponse(IOwinContext context, ICacheKey cacheKey, ICacheEntry cacheEntry)
+        {
+            await HandleUncachedRequest(context, cacheKey);
         }
 
         private bool IsMethodSafe(IOwinRequest request)
@@ -134,7 +183,7 @@ namespace ReverseProxy.Owin
             }
         }
 
-        private bool IsValid(ICacheEntry cacheEntry, IOwinRequest request)
+        private bool IsFresh(ICacheEntry cacheEntry, IOwinRequest request)
         {
             var expirationDates = GetExpirationDates(cacheEntry, request).ToArray();
             if (!expirationDates.Any())
@@ -147,25 +196,7 @@ namespace ReverseProxy.Owin
 
         private void Output(IOwinResponse response, ICacheEntry cacheEntry)
         {
-            var variables = new[]
-            {
-                "owin.ResponseStatusCode",
-                "owin.ResponseReasonPhrase",
-                "owin.ResponseHeaders",
-                "owin.ResponseBody"
-            };
-            foreach (var variable in variables)
-            {
-                object value;
-                if (cacheEntry.Response.Environment.TryGetValue(variable, out value))
-                {
-                    response.Environment[variable] = value;
-                }
-                else
-                {
-                    response.Environment.Remove(variable);
-                }
-            }
+            cacheEntry.Response.CopyTo(response);
         }
 
         private Task Cache(ICacheKey cacheKey, IOwinContext context)

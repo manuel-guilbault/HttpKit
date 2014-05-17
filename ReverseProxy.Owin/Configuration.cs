@@ -9,6 +9,7 @@ namespace ReverseProxy.Owin
     public class Configuration
     {
         private readonly ICache cache;
+        private readonly ILockManager lockManager;
 
         private string[] safeMethods = new[]
         {
@@ -16,16 +17,23 @@ namespace ReverseProxy.Owin
             "head"
         };
 
-        public Configuration(ICache cache)
+        public Configuration(ICache cache, ILockManager lockManager)
         {
             if (cache == null) throw new ArgumentNullException("cache");
+            if (lockManager == null) throw new ArgumentNullException("lockManager");
 
             this.cache = cache;
+            this.lockManager = lockManager;
         }
 
         public ICache Cache
         {
             get { return cache; }
+        }
+
+        public ILockManager LockManager
+        {
+            get { return lockManager; }
         }
 
         public string[] SafeMethods
