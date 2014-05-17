@@ -37,7 +37,7 @@ namespace HttpKit.Katana
 
         public static void SetAge(this IHeaderDictionary headers, TimeSpan age)
 		{
-			headers[ExpirationHeaders.AGE] = age.TotalSeconds.ToString();
+			headers[ExpirationHeaders.AGE] = ((int)Math.Ceiling(age.TotalSeconds)).ToString();
 		}
 
         public static DateTime? GetExpires(this IHeaderDictionary headers)

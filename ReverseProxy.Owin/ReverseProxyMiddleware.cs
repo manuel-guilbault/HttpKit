@@ -44,7 +44,12 @@ namespace ReverseProxy.Owin
                 return false;
             }
 
-            if (IsFresh(cacheEntry, context.Request))
+            var expirationDate = GetSoonestExpirationDate(cacheEntry, context.Request);
+            if (!expirationDate.HasValue)
+            {
+                return false;
+            }
+            else if (IsFresh(expirationDate.Value) && IsFreshLongEnough(context.Request, expirationDate.Value))
             {
                 await HandleFreshCachedResponse(context, cacheKey, cacheEntry);
             }
@@ -141,19 +146,6 @@ namespace ReverseProxy.Owin
             return new CacheKey(request);
         }
 
-        private Task<ICacheEntry> TryGetFromCache(ICacheKey key)
-        {
-            return configuration.Cache.Get(key).ContinueWith(task =>
-            {
-                if (task.IsFaulted)
-                {
-                    //TODO log
-                    return null;
-                }
-                return task.Result;
-            });
-        }
-
         private IEnumerable<DateTime> GetExpirationDates(ICacheEntry cacheEntry, IOwinRequest request)
         {
             var date = cacheEntry.Response.GetDate();
@@ -183,15 +175,35 @@ namespace ReverseProxy.Owin
             }
         }
 
-        private bool IsFresh(ICacheEntry cacheEntry, IOwinRequest request)
+        private DateTime? GetSoonestExpirationDate(ICacheEntry cacheEntry, IOwinRequest request)
         {
             var expirationDates = GetExpirationDates(cacheEntry, request).ToArray();
             if (!expirationDates.Any())
             {
-                return false;
+                return null;
             }
 
-            return expirationDates.Min() > Time.UtcNow;
+            return expirationDates.Min();
+        }
+
+        private bool IsFresh(DateTime expirationDate)
+        {
+            return expirationDate > Time.UtcNow;
+        }
+
+        private bool IsFreshLongEnough(IOwinRequest request, DateTime expirationDate)
+        {
+            var cacheControl = request.GetCacheControl();
+            if (cacheControl != null)
+            {
+                var minFresh = cacheControl.GetMinFresh();
+                if (minFresh != null)
+                {
+                    return Time.UtcNow.Add(minFresh.Delta) <= expirationDate;
+                }
+            }
+
+            return true;
         }
 
         private void Output(IOwinResponse response, ICacheEntry cacheEntry)
@@ -199,8 +211,44 @@ namespace ReverseProxy.Owin
             cacheEntry.Response.CopyTo(response);
         }
 
+        private void NormalizeForCache(IOwinContext context)
+        {
+            if (!context.Response.GetDate().HasValue)
+            {
+                context.Response.SetDate(Time.UtcNow);
+            }
+        }
+
+        private void NormalizeFromCache(IOwinResponse response)
+        {
+            var age = Time.UtcNow - response.GetDate().Value;
+            if (age < TimeSpan.Zero)
+            {
+                age = TimeSpan.Zero;
+            }
+            response.SetAge(age);
+        }
+
+        private Task<ICacheEntry> TryGetFromCache(ICacheKey key)
+        {
+            return configuration.Cache.Get(key).ContinueWith(task =>
+            {
+                if (task.IsFaulted)
+                {
+                    //TODO log
+                    return null;
+                }
+                if (task.Result != null)
+                {
+                    NormalizeFromCache(task.Result.Response);
+                }
+                return task.Result;
+            });
+        }
+
         private Task Cache(ICacheKey cacheKey, IOwinContext context)
         {
+            NormalizeForCache(context);
             return configuration.Cache.Set(cacheKey, new CacheEntry(context.Request, context.Response));
         }
     }

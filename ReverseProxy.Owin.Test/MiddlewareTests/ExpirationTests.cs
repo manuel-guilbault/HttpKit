@@ -93,6 +93,54 @@ namespace ReverseProxy.Owin.Test.MiddlewareTests
         }
 
         [TestMethod]
+        public void RequestWithMatchedMinFreshDirectiveShouldUseCachedResponse()
+        {
+            var context = new OwinContextMock();
+            context.Request.SetCacheControl(new RequestCacheControl(RequestCacheDirective.CreateMinFresh(TimeSpan.FromMinutes(3))));
+
+            Time.SetFixedCurrentTime(new DateTime(2014, 5, 14, 12, 0, 0, DateTimeKind.Utc));
+
+            var next = new NextOwinMiddlewareMock();
+
+            var cachedContext = new OwinContextMock();
+            cachedContext.Response.SetDate(Time.UtcNow.AddMinutes(-5));
+            cachedContext.Response.SetCacheControl(new ResponseCacheControl(ResponseCacheDirective.CreateMaxAge(TimeSpan.FromMinutes(10))));
+
+            var configuration = new ConfigurationMock();
+            configuration.CacheMock.Setup(cache => cache.Get(It.IsAny<ICacheKey>()))
+                .Returns(Task.FromResult<ICacheEntry>(new CacheEntry(cachedContext.Request, cachedContext.Response)));
+
+            var sut = new ReverseProxyMiddleware(next.Object, configuration.Configuration);
+            sut.Invoke(context).Wait();
+
+            next.AssertNotPassedThrough();
+        }
+
+        [TestMethod]
+        public void RequestWithUnmatchedMinFreshDirectiveShouldPassThrough()
+        {
+            var context = new OwinContextMock();
+            context.Request.SetCacheControl(new RequestCacheControl(RequestCacheDirective.CreateMinFresh(TimeSpan.FromMinutes(8))));
+
+            Time.SetFixedCurrentTime(new DateTime(2014, 5, 14, 12, 0, 0, DateTimeKind.Utc));
+
+            var next = new NextOwinMiddlewareMock();
+
+            var cachedContext = new OwinContextMock();
+            cachedContext.Response.SetDate(Time.UtcNow.AddMinutes(-5));
+            cachedContext.Response.SetCacheControl(new ResponseCacheControl(ResponseCacheDirective.CreateMaxAge(TimeSpan.FromMinutes(10))));
+
+            var configuration = new ConfigurationMock();
+            configuration.CacheMock.Setup(cache => cache.Get(It.IsAny<ICacheKey>()))
+                .Returns(Task.FromResult<ICacheEntry>(new CacheEntry(cachedContext.Request, cachedContext.Response)));
+
+            var sut = new ReverseProxyMiddleware(next.Object, configuration.Configuration);
+            sut.Invoke(context).Wait();
+
+            next.AssertPassedThrough(context);
+        }
+
+        [TestMethod]
         public void ResponseWithNoCacheDirectiveShouldNotBeCached()
         {
             var context = new OwinContextMock();
